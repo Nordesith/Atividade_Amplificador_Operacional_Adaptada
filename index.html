@@ -1,0 +1,3224 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OPERAÇÃO AGV — Versão Acessível</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --primary: #2c5f8a;
+        --primary-d: #1f4568;
+        --accent: #d97742;
+        --accent-d: #b55e2e;
+        --bg: #fafafa;
+        --bg-alt: #f0f2f4;
+        --success: #4a8b3a;
+        --alert: #a83232;
+        --text: #2a2e32;
+        --muted: #5a6b77;
+        --border: #d5dce1;
+        --radius: 14px;
+        --shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        --soft-yellow: #fff9e6;
+        --soft-blue: #eaf3f9;
+        --soft-green: #edf6e9;
+        --soft-red: #fbe9e9;
+        --font-base: 18px;
+      }
+      body {
+        font-family: "Segoe UI", Verdana, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: var(--font-base);
+        line-height: 1.8;
+        letter-spacing: 0.01em;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: inherit;
+        color: inherit;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        line-height: 1.4;
+        color: var(--primary-d);
+        margin-bottom: 0.6rem;
+      }
+      h2 {
+        font-size: 1.6rem;
+      }
+      h3 {
+        font-size: 1.3rem;
+        margin-top: 1.4rem;
+      }
+      p {
+        margin-bottom: 0.9rem;
+        max-width: 62ch;
+      }
+      ul,
+      ol {
+        margin: 0.6rem 0 1rem 1.6rem;
+      }
+      li {
+        margin-bottom: 0.5rem;
+      }
+      :focus-visible {
+        outline: 4px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+
+      /* SELO DE ETAPA (rotina previsível) */
+      .step-ribbon {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+        padding: 0.7rem;
+        background: var(--soft-blue);
+        border-radius: 10px;
+        justify-content: center;
+      }
+      .step-ribbon .step {
+        padding: 0.35rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--muted);
+        background: #fff;
+        border: 2px solid var(--border);
+      }
+      .step-ribbon .step.done {
+        background: var(--soft-green);
+        border-color: var(--success);
+        color: var(--success);
+      }
+      .step-ribbon .step.current {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent-d);
+      }
+
+      /* HEADER */
+      .topbar {
+        background: var(--primary);
+        color: #fff;
+        padding: 0.9rem 1.2rem;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: var(--shadow);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+      .brand .logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--accent);
+        display: grid;
+        place-items: center;
+        font-size: 1.3rem;
+      }
+      .brand small {
+        display: block;
+        font-weight: 400;
+        font-size: 0.78rem;
+        opacity: 0.85;
+      }
+      .nav {
+        display: flex;
+        gap: 0.3rem;
+        margin-left: auto;
+        flex-wrap: wrap;
+      }
+      .nav button {
+        color: #fff;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        border: 2px solid transparent;
+        min-height: 48px;
+      }
+      .nav button:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+      .nav button.active {
+        background: var(--accent);
+        border-color: var(--accent-d);
+      }
+
+      .main {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 4rem;
+      }
+      .card {
+        background: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.5rem 1.8rem;
+        margin-bottom: 1.2rem;
+        border: 2px solid var(--border);
+      }
+      .card-soft {
+        background: var(--soft-blue);
+        border: 2px solid var(--primary);
+        border-radius: var(--radius);
+        padding: 1.4rem 1.6rem;
+        margin-bottom: 1.2rem;
+      }
+      .card-warn {
+        background: var(--soft-red);
+        border: 2px solid var(--alert);
+        border-radius: var(--radius);
+        padding: 1.4rem 1.6rem;
+        margin-bottom: 1.2rem;
+      }
+      .card-ok {
+        background: var(--soft-green);
+        border: 2px solid var(--success);
+        border-radius: var(--radius);
+        padding: 1.4rem 1.6rem;
+        margin-bottom: 1.2rem;
+      }
+      .card-yellow {
+        background: var(--soft-yellow);
+        border: 2px solid var(--accent);
+        border-radius: var(--radius);
+        padding: 1.4rem 1.6rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.5rem;
+        border-radius: 12px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        min-height: 52px;
+        transition: background 0.15s;
+        border: 2px solid var(--primary-d);
+      }
+      .btn:hover {
+        background: var(--primary-d);
+      }
+      .btn.acc {
+        background: var(--accent);
+        border-color: var(--accent-d);
+      }
+      .btn.acc:hover {
+        background: var(--accent-d);
+      }
+      .btn.ghost {
+        background: #fff;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+      }
+      .btn.ghost:hover {
+        background: var(--soft-blue);
+      }
+      .btn[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.sm {
+        padding: 0.6rem 1rem;
+        min-height: 44px;
+        font-size: 0.92rem;
+      }
+
+      /* DASHBOARD */
+      .hero {
+        background: linear-gradient(135deg, var(--primary), #3e7aa8);
+        color: #fff;
+        border-radius: var(--radius);
+        padding: 1.8rem 1.6rem;
+        margin-bottom: 1.4rem;
+        text-align: center;
+      }
+      .hero h2 {
+        color: #fff;
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
+      }
+      .hero p {
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 0.4rem;
+        max-width: none;
+      }
+      .name-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0.9rem 0;
+      }
+      .name-box label {
+        font-size: 0.92rem;
+        opacity: 0.9;
+      }
+      .name-box input {
+        padding: 0.7rem 1rem;
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        font-size: 1.05rem;
+        width: 100%;
+        max-width: 340px;
+        min-height: 48px;
+      }
+      .name-box input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .xpbar {
+        height: 16px;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        overflow: hidden;
+        margin: 0.8rem auto 0;
+        max-width: 400px;
+      }
+      .xpbar > div {
+        height: 100%;
+        background: var(--accent);
+        transition: width 0.6s;
+      }
+
+      .grid-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.9rem;
+        margin-bottom: 1.2rem;
+      }
+      .stat {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.1rem;
+        border: 2px solid var(--border);
+        text-align: center;
+      }
+      .stat .num {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--primary);
+      }
+      .stat .lbl {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.2rem;
+      }
+
+      .grid-mod {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .mod-card {
+        background: #fff;
+        border: 3px solid var(--border);
+        border-radius: 14px;
+        padding: 1.3rem 1.4rem;
+        text-align: left;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+        min-height: 100px;
+        cursor: pointer;
+      }
+      .mod-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        border-color: var(--accent);
+      }
+      .mod-card.done {
+        border-color: var(--success);
+        background: var(--soft-green);
+      }
+      .mod-card.available {
+        border-color: var(--accent);
+        background: var(--soft-yellow);
+      }
+      .mod-card.locked {
+        opacity: 0.55;
+        cursor: not-allowed;
+        background: #f5f5f5;
+      }
+      .mod-card .mod-icon {
+        font-size: 2.5rem;
+        flex-shrink: 0;
+        width: 70px;
+        text-align: center;
+      }
+      .mod-card .mod-info {
+        flex: 1;
+      }
+      .mod-card h4 {
+        font-size: 1.1rem;
+        margin: 0 0 0.2rem;
+        color: var(--primary-d);
+      }
+      .mod-card .mod-sub {
+        font-size: 0.88rem;
+        color: var(--muted);
+        margin: 0;
+      }
+      .mod-card .mod-badge {
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.25rem 0.7rem;
+        border-radius: 20px;
+        background: var(--primary);
+        color: #fff;
+        margin-top: 0.4rem;
+        display: inline-block;
+      }
+      .mod-card.done .mod-badge {
+        background: var(--success);
+      }
+      .mod-card.available .mod-badge {
+        background: var(--accent);
+      }
+
+      /* CONTEÚDO DO MÓDULO */
+      .lesson {
+        background: #fff;
+        border-radius: var(--radius);
+        border: 2px solid var(--border);
+        padding: 1.8rem 2rem;
+        margin-bottom: 1.2rem;
+      }
+      .module-tag {
+        display: inline-block;
+        background: var(--primary);
+        color: #fff;
+        font-size: 0.8rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 20px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        margin-bottom: 1rem;
+      }
+
+      .block-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.25rem;
+        color: var(--primary-d);
+        font-weight: 800;
+        margin: 1.5rem 0 0.7rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 3px solid var(--soft-blue);
+      }
+      .block-title .ico {
+        font-size: 1.6rem;
+      }
+
+      .interest-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+        margin: 1.2rem 0;
+      }
+      @media (min-width: 640px) {
+        .interest-grid {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+      .interest-card {
+        border-radius: 12px;
+        padding: 1.1rem 1.2rem;
+        border: 2px solid;
+        text-align: left;
+      }
+      .interest-card.soccer {
+        background: var(--soft-green);
+        border-color: var(--success);
+      }
+      .interest-card.plane {
+        background: var(--soft-blue);
+        border-color: var(--primary);
+      }
+      .interest-card.order {
+        background: var(--soft-yellow);
+        border-color: var(--accent);
+      }
+      .interest-card .interest-head {
+        font-size: 1.4rem;
+        margin-bottom: 0.4rem;
+        display: block;
+      }
+      .interest-card .interest-title {
+        font-weight: 800;
+        font-size: 0.95rem;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+      }
+      .interest-card p {
+        font-size: 0.95rem;
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      .img-frame {
+        background: #fff;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 1.1rem;
+        margin: 1.2rem 0;
+        text-align: center;
+      }
+      .img-frame svg {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+      .img-caption {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin-top: 0.7rem;
+        font-style: italic;
+        text-align: left;
+        padding: 0 0.5rem;
+      }
+
+      /* ÁREA INTERATIVA */
+      .ia {
+        background: var(--soft-blue);
+        border: 2px solid var(--primary);
+        border-radius: 12px;
+        padding: 1.3rem 1.4rem;
+        margin: 1.2rem 0;
+      }
+      .ia .ia-title {
+        font-weight: 800;
+        color: var(--primary-d);
+        font-size: 1.05rem;
+        margin-bottom: 0.8rem;
+      }
+      .ia label {
+        display: block;
+        font-size: 0.92rem;
+        color: var(--primary-d);
+        font-weight: 600;
+        margin: 0.7rem 0 0.3rem;
+      }
+      .ia input[type="range"] {
+        width: 100%;
+        height: 32px;
+        accent-color: var(--accent);
+      }
+      .ia .val {
+        font-family: ui-monospace, Consolas, monospace;
+        color: var(--accent-d);
+        font-weight: 800;
+        font-size: 1.05rem;
+      }
+      .row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .row > * {
+        flex: 1;
+        min-width: 200px;
+      }
+      canvas {
+        max-width: 100%;
+        display: block;
+        border-radius: 10px;
+        background: #1a2530;
+        border: 2px solid var(--border);
+        margin: 0.6rem 0;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 1rem;
+        background: #fff;
+        min-height: 48px;
+      }
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      .field textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+      .field label {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+        color: var(--primary-d);
+      }
+
+      /* QUIZ */
+      .quiz-q {
+        background: #fff;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 1.3rem 1.4rem;
+        margin-bottom: 1.1rem;
+      }
+      .quiz-q .qtext {
+        font-weight: 700;
+        margin-bottom: 1rem;
+        font-size: 1.05rem;
+        display: block;
+      }
+      .quiz-opt {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.9rem 1.1rem;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 0.6rem;
+        background: #fff;
+        transition: all 0.15s;
+        min-height: 56px;
+        font-size: 1rem;
+        line-height: 1.4;
+      }
+      .quiz-opt:hover:not([disabled]) {
+        border-color: var(--primary);
+        background: var(--soft-blue);
+      }
+      .quiz-opt.correct {
+        border-color: var(--success);
+        background: var(--soft-green);
+        font-weight: 700;
+      }
+      .quiz-opt.wrong {
+        border-color: var(--alert);
+        background: var(--soft-red);
+      }
+      .quiz-opt[disabled] {
+        cursor: default;
+        opacity: 0.75;
+      }
+      .fb {
+        margin-top: 0.7rem;
+        padding: 0.9rem 1.1rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .fb.ok {
+        background: var(--soft-green);
+        color: #2d5a1f;
+        border-left: 5px solid var(--success);
+      }
+      .fb.no {
+        background: var(--soft-red);
+        color: #7a1a1a;
+        border-left: 5px solid var(--alert);
+      }
+      .fb[hidden] {
+        display: none;
+      }
+
+      /* REQUISITOS */
+      .req-list {
+        background: var(--soft-yellow);
+        border: 2px dashed var(--accent);
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        margin: 1.2rem 0;
+      }
+      .req-list .req-title {
+        font-weight: 800;
+        color: var(--primary-d);
+        font-size: 1rem;
+        margin-bottom: 0.6rem;
+      }
+      .req-item {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.5rem 0;
+        font-size: 0.98rem;
+      }
+      .req-item .req-ic {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        background: #d5dce1;
+        color: #fff;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+      }
+      .req-item.ok {
+        color: var(--success);
+        font-weight: 700;
+      }
+      .req-item.ok .req-ic {
+        background: var(--success);
+      }
+
+      /* NAVEGAÇÃO */
+      .tp-nav {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        margin-top: 1.8rem;
+        flex-wrap: wrap;
+      }
+      .hint-box {
+        background: var(--soft-yellow);
+        border-left: 5px solid var(--accent);
+        padding: 0.9rem 1.1rem;
+        border-radius: 8px;
+        margin: 0.8rem 0;
+        font-size: 0.95rem;
+      }
+      .hint-box summary {
+        cursor: pointer;
+        font-weight: 700;
+        color: var(--accent-d);
+      }
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 2rem 1rem;
+        font-style: italic;
+      }
+      .done-chk {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 1rem;
+        padding: 0.7rem 0;
+        cursor: pointer;
+        line-height: 1.4;
+      }
+      .done-chk input {
+        width: 26px;
+        height: 26px;
+        accent-color: var(--success);
+        flex-shrink: 0;
+      }
+
+      /* DATASHEET VIEWER */
+      .ds-viewer {
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        margin: 1.2rem 0;
+        overflow: hidden;
+      }
+      .ds-tabs {
+        display: flex;
+        background: var(--soft-blue);
+        border-bottom: 2px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .ds-tabs button {
+        flex: 1;
+        padding: 0.9rem 1rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--primary);
+        border-bottom: 4px solid transparent;
+        min-width: 130px;
+        min-height: 52px;
+      }
+      .ds-tabs button.active {
+        border-bottom-color: var(--accent);
+        background: #fff;
+        color: var(--accent-d);
+      }
+      .ds-body {
+        padding: 1.3rem;
+        background: #fff;
+        font-size: 0.98rem;
+        line-height: 1.7;
+      }
+
+      /* MEDIÇÕES */
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.8rem 0;
+        font-size: 0.92rem;
+      }
+      .table th,
+      .table td {
+        border: 2px solid var(--border);
+        padding: 0.7rem 0.8rem;
+        text-align: left;
+      }
+      .table th {
+        background: var(--soft-blue);
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--primary-d);
+      }
+
+      /* FORM */
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      @media (min-width: 640px) {
+        .form-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .form-grid .full {
+          grid-column: 1/-1;
+        }
+      }
+
+      /* TOAST */
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary);
+        color: #fff;
+        padding: 1rem 1.6rem;
+        border-radius: 30px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        z-index: 999;
+        font-weight: 700;
+        font-size: 1rem;
+        animation: toastIn 0.3s ease-out;
+        max-width: 90vw;
+        text-align: center;
+      }
+
+      .save-indicator {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        background: var(--success);
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        opacity: 0;
+        transition: opacity 0.4s;
+        z-index: 999;
+        pointer-events: none;
+      }
+
+      /* CERTIFICADO */
+      .cert-toolbar {
+        background: #fff;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem 1.3rem;
+        margin-bottom: 1.2rem;
+        display: flex;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .cert-toolbar label {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      .cert-toolbar input {
+        padding: 0.7rem 0.9rem;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-size: 1rem;
+        min-width: 240px;
+        min-height: 48px;
+      }
+      .print-warning {
+        background: var(--soft-yellow);
+        color: #7a4a00;
+        padding: 0.7rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        border-left: 4px solid var(--accent);
+        line-height: 1.5;
+      }
+      .cert-wrap {
+        background: #f0f2f4;
+        padding: 1.5rem;
+        border-radius: 12px;
+        overflow-x: auto;
+      }
+      .cert {
+        container-type: inline-size;
+        position: relative;
+        width: 100%;
+        max-width: 1000px;
+        min-width: 620px;
+        aspect-ratio: 297/210;
+        margin: 0 auto;
+        background: #fff;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        overflow: hidden;
+      }
+      .cert-frame {
+        position: absolute;
+        inset: 2cqw;
+        border: 0.3cqw solid var(--primary);
+        padding: 2.2cqw 5cqw;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
+      }
+      .cert-corner {
+        position: absolute;
+        width: 5cqw;
+        height: 5cqw;
+        border: 0.4cqw solid var(--accent);
+      }
+      .cert-corner.tl {
+        top: -0.8cqw;
+        left: -0.8cqw;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .cert-corner.tr {
+        top: -0.8cqw;
+        right: -0.8cqw;
+        border-left: 0;
+        border-bottom: 0;
+      }
+      .cert-corner.bl {
+        bottom: -0.8cqw;
+        left: -0.8cqw;
+        border-right: 0;
+        border-top: 0;
+      }
+      .cert-corner.br {
+        bottom: -0.8cqw;
+        right: -0.8cqw;
+        border-left: 0;
+        border-top: 0;
+      }
+      .cert-logo {
+        display: inline-block;
+        font-size: 2cqw;
+        font-weight: 800;
+        letter-spacing: 0.35cqw;
+        background: var(--primary);
+        color: #fff;
+        padding: 0.5cqw 2.4cqw;
+        border-radius: 0.7cqw;
+      }
+      .cert-title {
+        font-size: 4cqw;
+        font-weight: 800;
+        color: var(--primary);
+        letter-spacing: 0.6cqw;
+        margin-top: 1cqw;
+      }
+      .cert-subtitle {
+        color: var(--alert);
+        font-weight: 700;
+        letter-spacing: 0.25cqw;
+        font-size: 1.2cqw;
+        margin-top: 0.3cqw;
+      }
+      .cert-body {
+        line-height: 1.6;
+        font-size: 1.35cqw;
+      }
+      .cert-body .lbl {
+        color: var(--muted);
+        font-size: 1.3cqw;
+      }
+      .cert-name {
+        display: inline-block;
+        max-width: 84cqw;
+        min-width: 30cqw;
+        font-size: 3.2cqw;
+        font-weight: 800;
+        color: var(--primary);
+        border-bottom: 0.25cqw solid var(--accent);
+        padding: 0 3cqw 0.3cqw;
+        margin: 0.5cqw 0 0.9cqw;
+        overflow-wrap: anywhere;
+      }
+      .cert-name.md {
+        font-size: 2.5cqw;
+      }
+      .cert-name.sm {
+        font-size: 1.9cqw;
+      }
+      .cert-course {
+        font-size: 2cqw;
+        font-weight: 800;
+        color: var(--primary);
+        margin: 0.8cqw 0 0.2cqw;
+      }
+      .cert-detail {
+        font-size: 1.3cqw;
+        color: #455a64;
+        line-height: 1.6;
+      }
+      .cert-sig-row {
+        display: flex;
+        justify-content: center;
+        gap: 12cqw;
+      }
+      .cert-sig {
+        width: 30cqw;
+      }
+      .cert-sig .line {
+        border-top: 0.15cqw solid #2a2e32;
+        margin-bottom: 0.5cqw;
+      }
+      .cert-sig .name {
+        font-weight: 800;
+        color: var(--primary);
+        font-size: 1.5cqw;
+      }
+      .cert-sig .role {
+        font-size: 1cqw;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1cqw;
+      }
+      .cert-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+      .cert-seal {
+        border: 0.25cqw solid var(--accent);
+        background: var(--soft-yellow);
+        border-radius: 5cqw;
+        padding: 0.5cqw 1.6cqw;
+        font-size: 1.1cqw;
+        color: var(--accent-d);
+        font-weight: 800;
+      }
+      .cert-meta {
+        font-size: 1.1cqw;
+        color: var(--muted);
+        text-align: right;
+        line-height: 1.5;
+      }
+      .cert-id {
+        font-family: ui-monospace, Consolas, monospace;
+        font-weight: 700;
+      }
+
+      /* MOBILE */
+      @media (max-width: 640px) {
+        :root {
+          --font-base: 17px;
+        }
+        .topbar {
+          padding: 0.7rem 0.9rem;
+        }
+        .nav {
+          width: 100%;
+          margin-left: 0;
+          order: 3;
+        }
+        .nav button {
+          flex: 1;
+          font-size: 0.85rem;
+          padding: 0.6rem 0.3rem;
+          min-height: 44px;
+        }
+        .main {
+          padding: 1rem 0.8rem 3rem;
+        }
+        .lesson {
+          padding: 1.2rem 1.1rem;
+        }
+        .card {
+          padding: 1.1rem;
+        }
+        .cert {
+          min-width: 0;
+        }
+        .mod-card {
+          padding: 1rem;
+          gap: 0.7rem;
+        }
+        .mod-card .mod-icon {
+          font-size: 2rem;
+          width: 52px;
+        }
+      }
+
+      /* ACESSIBILIDADE — REDUÇÃO DE MOVIMENTO */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      body.reduced-motion * {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      /* IMPRESSÃO DO CERTIFICADO */
+      @media print {
+        body {
+          background: #fff;
+        }
+        .topbar,
+        .no-print,
+        .tp-nav,
+        .save-indicator {
+          display: none !important;
+        }
+        .main {
+          padding: 0;
+          max-width: none;
+          margin: 0;
+        }
+        .cert-wrap {
+          padding: 0;
+          margin: 0;
+          background: #fff;
+          overflow: hidden;
+          width: 297mm;
+          height: 209mm;
+        }
+        .cert {
+          width: 297mm;
+          max-width: none;
+          min-width: 0;
+          height: 209mm;
+          aspect-ratio: auto;
+          margin: 0;
+          box-shadow: none;
+        }
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      "use strict";
+      /* =========================================================
+   OPERAÇÃO AGV — VERSÃO ACESSÍVEL (TEA NÍVEL 3)
+   Rotina previsível · Linguagem literal · Integração de hiperfocos
+   ========================================================= */
+
+      const STORAGE_KEY = "operacao_agv_tea_v1";
+      const XP_PER_CORRECT = 10;
+
+      /* ==================== NÍVEIS SIMPLIFICADOS ==================== */
+      const LEVELS = [
+        { min: 0, name: "Aprendiz" },
+        { min: 40, name: "Observador" },
+        { min: 100, name: "Praticante" },
+        { min: 180, name: "Técnico Júnior" },
+        { min: 280, name: "Técnico" },
+      ];
+
+      /* ==================== MEDALHAS ==================== */
+      const BADGES = {
+        primeiro_passo: {
+          name: "Primeiro Passo",
+          icon: "🎉",
+          how: "Concluir o Módulo 0.",
+        },
+        leitor_atento: {
+          name: "Leitor Atento",
+          icon: "📖",
+          how: "Acerte o quiz do Módulo 1.",
+        },
+        olho_tecnico: {
+          name: "Olho Técnico",
+          icon: "👁️",
+          how: "Acerte o quiz do Módulo 2.",
+        },
+        juiz_eletronico: {
+          name: "Juiz Eletrônico",
+          icon: "⚽",
+          how: "Acerte o quiz do Módulo 3.",
+        },
+        montador_cuidadoso: {
+          name: "Montador Cuidadoso",
+          icon: "🛡️",
+          how: "Faça o checklist do Módulo 4.",
+        },
+        medidor_preciso: {
+          name: "Medidor Preciso",
+          icon: "📏",
+          how: "Registre 1 medição no Módulo 5.",
+        },
+        detetive: {
+          name: "Detetive",
+          icon: "🔍",
+          how: "Revele a análise do Módulo 6.",
+        },
+        documentador: {
+          name: "Documentador",
+          icon: "📋",
+          how: "Salve o dossiê no Módulo 7.",
+        },
+        integrador: {
+          name: "Integrador",
+          icon: "🏆",
+          how: "Conclua o Módulo 8.",
+        },
+      };
+
+      /* ==================== SVG SIMPLIFICADOS ==================== */
+      const SVG = {
+        agvPlano: () => `
+    <div class="img-frame">
+      <svg viewBox="0 0 500 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Desenho de um AGV sobre uma linha no chão">
+        <rect x="0" y="120" width="500" height="30" fill="#e0e6eb"/>
+        <line x1="20" y1="135" x2="480" y2="135" stroke="#2C5F8A" stroke-width="8" stroke-linecap="round"/>
+        <line x1="20" y1="135" x2="480" y2="135" stroke="#F2C200" stroke-width="2" stroke-dasharray="14 10"/>
+        <rect x="190" y="65" width="120" height="60" rx="10" fill="#2C5F8A" stroke="#1F4568" stroke-width="2"/>
+        <text x="250" y="102" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">AGV</text>
+        <circle cx="215" cy="125" r="10" fill="#333"/>
+        <circle cx="285" cy="125" r="10" fill="#333"/>
+        <circle cx="205" cy="80" r="5" fill="#F2C200"/>
+        <circle cx="295" cy="80" r="5" fill="#F2C200"/>
+        <text x="250" y="40" text-anchor="middle" font-size="14" font-weight="bold" fill="#2A2E32">O AGV anda sobre a linha</text>
+      </svg>
+      <div class="img-caption">O AGV é um carrinho que anda sozinho. Ele segue uma linha colorida no chão.</div>
+    </div>`,
+        sensorSinal: () => `
+    <div class="img-frame">
+      <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sensor lendo sinal que oscila entre 0,8 e 3,2 volts">
+        <rect x="40" y="20" width="80" height="60" rx="8" fill="#4A8B3A" stroke="#2d5a1f" stroke-width="2"/>
+        <text x="80" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">SENSOR</text>
+        <line x1="120" y1="50" x2="180" y2="50" stroke="#2C5F8A" stroke-width="3"/>
+        <path d="M180,50 Q195,20 210,50 T240,50 T270,50 T300,50 T330,50 T360,50 T390,50 T420,50" fill="none" stroke="#D97742" stroke-width="3"/>
+        <line x1="180" y1="30" x2="180" y2="70" stroke="#2A2E32" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="180" y1="20" x2="440" y2="20" stroke="#A83232" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="180" y1="80" x2="440" y2="80" stroke="#A83232" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="445" y="25" font-size="11" font-weight="bold" fill="#A83232">máx 3,2 V</text>
+        <text x="445" y="85" font-size="11" font-weight="bold" fill="#A83232">mín 0,8 V</text>
+        <text x="290" y="130" text-anchor="middle" font-size="14" font-weight="bold" fill="#2A2E32">Sinal sobe e desce. Não para.</text>
+        <text x="290" y="155" text-anchor="middle" font-size="12" fill="#5A6B77">Entre 0,8 V e 3,2 V</text>
+      </svg>
+      <div class="img-caption">O sensor manda um sinal que sobe e desce sem parar. É como uma corda balançando.</div>
+    </div>`,
+        comparadorSimples: () => `
+    <div class="img-frame">
+      <svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparador compara entrada com referência">
+        <rect x="30" y="80" width="120" height="60" rx="10" fill="#EAF3F9" stroke="#2C5F8A" stroke-width="2"/>
+        <text x="90" y="110" text-anchor="middle" font-size="13" font-weight="bold" fill="#2C5F8A">Vin</text>
+        <text x="90" y="128" text-anchor="middle" font-size="11" fill="#5A6B77">sinal do sensor</text>
+        <line x1="150" y1="110" x2="210" y2="110" stroke="#2C5F8A" stroke-width="3"/>
+        <polygon points="210,60 210,160 340,110" fill="#EAF3F9" stroke="#2C5F8A" stroke-width="3"/>
+        <text x="240" y="95" font-size="20" font-weight="bold" fill="#2C5F8A">+</text>
+        <text x="240" y="145" font-size="20" font-weight="bold" fill="#2C5F8A">−</text>
+        <text x="275" y="115" text-anchor="middle" font-size="12" font-weight="bold" fill="#2C5F8A">comparador</text>
+        <rect x="30" y="160" width="120" height="45" rx="10" fill="#FBE9E9" stroke="#A83232" stroke-width="2"/>
+        <text x="90" y="180" text-anchor="middle" font-size="13" font-weight="bold" fill="#A83232">Vref</text>
+        <text x="90" y="196" text-anchor="middle" font-size="11" fill="#5A6B77">referência 2,0 V</text>
+        <line x1="150" y1="182" x2="210" y2="182" stroke="#A83232" stroke-width="3"/>
+        <line x1="210" y1="182" x2="210" y2="140" stroke="#A83232" stroke-width="3"/>
+        <line x1="340" y1="110" x2="440" y2="110" stroke="#D97742" stroke-width="3"/>
+        <text x="380" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#D97742">Vout</text>
+        <text x="380" y="140" text-anchor="middle" font-size="11" fill="#5A6B77">alto OU baixo</text>
+        <text x="250" y="205" text-anchor="middle" font-size="13" font-weight="bold" fill="#2A2E32">Vin &gt; Vref? → SIM ou NÃO</text>
+      </svg>
+      <div class="img-caption">O comparador olha o sinal e compara com uma referência. Só responde: SIM (alto) ou NÃO (baixo).</div>
+    </div>`,
+        arquitetura: () => `
+    <div class="img-frame">
+      <svg viewBox="0 0 900 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fluxo do sinal: sensor, buffer, filtro, comparador, controlador">
+        <defs><marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2C5F8A"/></marker></defs>
+        <rect x="15" y="55" width="140" height="70" rx="10" fill="#EDF6E9" stroke="#4A8B3A" stroke-width="2"/>
+        <text x="85" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#2d5a1f">SENSOR</text>
+        <text x="85" y="103" text-anchor="middle" font-size="10" fill="#5A6B77">0,8 a 3,2 V</text>
+        <rect x="185" y="55" width="140" height="70" rx="10" fill="#EAF3F9" stroke="#2C5F8A" stroke-width="2"/>
+        <text x="255" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#2C5F8A">BUFFER</text>
+        <text x="255" y="103" text-anchor="middle" font-size="10" fill="#5A6B77">protege o sensor</text>
+        <rect x="355" y="55" width="140" height="70" rx="10" fill="#EAF3F9" stroke="#2C5F8A" stroke-width="2"/>
+        <text x="425" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#2C5F8A">FILTRO</text>
+        <text x="425" y="103" text-anchor="middle" font-size="10" fill="#5A6B77">tira o barulho</text>
+        <rect x="525" y="55" width="170" height="70" rx="10" fill="#FFF9E6" stroke="#D97742" stroke-width="2"/>
+        <text x="610" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#B55E2E">COMPARADOR</text>
+        <text x="610" y="103" text-anchor="middle" font-size="10" fill="#5A6B77">decide SIM ou NÃO</text>
+        <rect x="725" y="55" width="160" height="70" rx="10" fill="#FBE9E9" stroke="#A83232" stroke-width="2"/>
+        <text x="805" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#A83232">CONTROLADOR</text>
+        <text x="805" y="103" text-anchor="middle" font-size="10" fill="#5A6B77">manda o AGV</text>
+        <g stroke="#2C5F8A" stroke-width="3" fill="none" marker-end="url(#arw)">
+          <line x1="155" y1="90" x2="183" y2="90"/>
+          <line x1="325" y1="90" x2="353" y2="90"/>
+          <line x1="495" y1="90" x2="523" y2="90"/>
+          <line x1="695" y1="90" x2="723" y2="90"/>
+        </g>
+      </svg>
+      <div class="img-caption">O sinal passa por 4 etapas antes de chegar ao controlador. Cada etapa faz um trabalho.</div>
+    </div>`,
+      };
+
+      /* ==================== MÓDULOS SIMPLIFICADOS ==================== */
+      const MODULES = [
+        /* ========== MÓDULO 0 ========== */
+        {
+          id: 0,
+          icon: "🎯",
+          title: "O Problema",
+          subtitle: "O AGV não segue a linha",
+          xp: 10,
+          requirements: [],
+          content: `
+      <span class="module-tag">MÓDULO 0 · O PROBLEMA</span>
+      <h2>O AGV não segue a linha</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>Existe um carrinho chamado <strong>AGV</strong>. Ele anda sozinho pela fábrica.</p>
+      <p>O AGV tem um <strong>sensor</strong>. O sensor olha a linha no chão.</p>
+      <p>Mas o AGV está com problema. Ele sai da linha. Ele para sem motivo.</p>
+      ${SVG.agvPlano()}
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      <p>O sensor manda um sinal elétrico. Esse sinal <strong>sobe e desce</strong>.</p>
+      <p>O sinal fica entre <strong>0,8 V</strong> e <strong>3,2 V</strong>.</p>
+      <p>O sinal também fica <strong>tremendo</strong>. Isso se chama <strong>ruído</strong>.</p>
+      ${SVG.sensorSinal()}
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>É como um jogador que não consegue ver a bola direito. A bola está lá, mas ele se confunde.</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>É como o piloto automático do avião recebendo sinal fraco do rádio. Ele não sabe para onde ir.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É como uma oração que perde a ordem. Quando uma parte falha, o todo não funciona.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✋</span> PRATIQUE</div>
+      <div class="card-soft">
+        <p><strong>Pense e escreva.</strong> Não tem resposta certa. É só sua opinião.</p>
+        <div class="field"><label for="pre1">Por que o AGV sai da linha?</label><textarea id="pre1" placeholder="Escreva com suas palavras..."></textarea></div>
+        <div class="field"><label for="pre2">O que você acha que devemos fazer?</label><textarea id="pre2" placeholder="Escreva com suas palavras..."></textarea></div>
+        <button class="btn sm" id="savePre" style="margin-top:.8rem">Salvar</button>
+        <span id="preStatus" class="muted" style="margin-left:.6rem;font-size:.9rem"></span>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>
+      <p class="muted">Responda as 2 perguntas. Você pode tentar de novo se errar.</p>`,
+          quiz: [
+            {
+              q: "O que o sensor do AGV mede?",
+              options: [
+                "A cor da linha",
+                "A luz que reflete na linha",
+                "O peso do AGV",
+              ],
+              correct: 1,
+              feedback: {
+                correct: "Muito bem! O sensor vê a luz que volta da linha.",
+                wrong: "Não é isso. O sensor olha a luz que reflete da linha.",
+              },
+            },
+            {
+              q: "O que é ruído no sinal?",
+              options: [
+                "Um barulho alto",
+                "Uma tremida no sinal",
+                "Uma cor diferente",
+              ],
+              correct: 1,
+              feedback: {
+                correct:
+                  "Isso mesmo! Ruído é uma tremida que atrapalha o sinal.",
+                wrong: "Ruído não é som. É uma tremida no sinal.",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 1 ========== */
+        {
+          id: 1,
+          icon: "🧠",
+          title: "O Cérebro do Condicionador",
+          subtitle: "O Amplificador Operacional",
+          xp: 15,
+          requirements: [],
+          content: `
+      <span class="module-tag">MÓDULO 1 · O CÉREBRO DO CONDICIONADOR</span>
+      <h2>O Amplificador Operacional</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>Existe uma peça chamada <strong>Amplificador Operacional</strong>. Também chamamos de <strong>AmpOp</strong>.</p>
+      <p>O AmpOp é um <strong>chip pequeno</strong>. Ele tem <strong>8 perninhas</strong>.</p>
+      <p>O AmpOp faz uma coisa importante: ele <strong>compara dois sinais</strong>.</p>
+      <p>Também pode <strong>aumentar</strong> um sinal fraco.</p>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      ${SVG.comparadorSimples()}
+      <p>Olhe o desenho. O AmpOp tem <strong>duas entradas</strong> em cima e <strong>uma saída</strong> embaixo.</p>
+      <p>Ele compara o sinal da entrada com a referência. Depois responde: <strong>SIM (alto)</strong> ou <strong>NÃO (baixo)</strong>.</p>
+
+      <div class="card-warn">
+        <p><strong>⚠️ Importante:</strong> o chip não gosta de ser ligado errado. Se ligar ao contrário, ele <strong>esquenta e queima</strong>.</p>
+      </div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>O AmpOp é como o <strong>juiz</strong>. Ele olha o lance e decide: foi gol (SIM) ou não foi (NÃO).</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>O AmpOp é como o <strong>piloto automático</strong>. Ele lê um sensor e decide: subir ou descer.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É como um <strong>responsável pela ordem</strong>. Ele olha duas coisas e decide o próximo passo.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✋</span> PRATIQUE</div>
+      <div class="ia">
+        <div class="ia-title">🔎 Clique nos terminais do chip</div>
+        <p>Cada botão mostra o que aquele pino faz.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;max-width:420px;margin:.8rem auto">
+          <button class="btn ghost sm" data-term="vin+">Entrada + (V+)</button>
+          <button class="btn ghost sm" data-term="vin-">Entrada − (V−)</button>
+          <button class="btn ghost sm" data-term="vout">Saída (Vout)</button>
+          <button class="btn ghost sm" data-term="vcc">Alimentação (Vcc)</button>
+        </div>
+        <div id="termInfo" style="margin-top:.8rem;padding:1rem;background:#fff;border-radius:8px;font-size:.98rem;min-height:70px;border:2px solid var(--border)">
+          Clique em um botão acima.
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "Quantas perninhas o AmpOp tem?",
+              options: ["4 perninhas", "6 perninhas", "8 perninhas"],
+              correct: 2,
+              feedback: {
+                correct: "Muito bem! São 8 perninhas no chip pequeno.",
+                wrong: "Não é isso. Conte outra vez: são 8 perninhas.",
+              },
+            },
+            {
+              q: "O que o AmpOp faz?",
+              options: [
+                "Desenha o chão",
+                "Compara dois sinais",
+                "Apaga a linha",
+              ],
+              correct: 1,
+              feedback: {
+                correct: "Isso! Ele compara dois sinais e decide.",
+                wrong: "Não é isso. O AmpOp compara dois sinais.",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 2 ========== */
+        {
+          id: 2,
+          icon: "📄",
+          title: "O Manual do Chip",
+          subtitle: "Como ler o datasheet",
+          xp: 15,
+          requirements: [],
+          content: `
+      <span class="module-tag">MÓDULO 2 · O MANUAL DO CHIP</span>
+      <h2>O manual do chip</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>Todo chip tem um <strong>manual</strong>. O nome do manual é <strong>datasheet</strong>.</p>
+      <p>O manual mostra <strong>tudo</strong> sobre o chip: quantas perninhas, quanta energia, o que cada pino faz.</p>
+      <p><strong>Regra:</strong> sempre leia o manual antes de usar o chip.</p>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      <p>Vamos ver 4 partes do manual. Clique em cada botão:</p>
+      <div class="ia">
+        <div class="ds-viewer">
+          <div class="ds-tabs" role="tablist">
+            <button data-ds="pin" class="active">1. Pinagem</button>
+            <button data-ds="vcc">2. Energia</button>
+            <button data-ds="out">3. Saída</button>
+            <button data-ds="temp">4. Temperatura</button>
+          </div>
+          <div class="ds-body" id="dsBody"></div>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>O datasheet é como o <strong>livro de regras do campeonato</strong>. Antes do jogo, todo mundo lê.</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>O datasheet é como o <strong>manual do avião</strong>. O piloto consulta antes de decolar.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>O datasheet é como um <strong>livro de orações</strong>. Diz a ordem certa de cada coisa.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✋</span> PRATIQUE</div>
+      <div class="card-soft">
+        <p><strong>Procure no datasheet:</strong> qual pino recebe a energia positiva?</p>
+        <div class="field"><label for="dsRef">Sua resposta (ex: pino 8)</label><input id="dsRef" placeholder="Digite o número do pino..."></div>
+        <button class="btn sm" id="dsCheck" style="margin-top:.7rem">Conferir</button>
+        <div id="dsFb" class="fb" hidden></div>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "O que é um datasheet?",
+              options: ["Um jogo", "O manual do chip", "Uma cor"],
+              correct: 1,
+              feedback: {
+                correct: "Isso! É o manual que explica o chip.",
+                wrong: "Não é isso. Datasheet é o manual do chip.",
+              },
+            },
+            {
+              q: "Quando devemos ler o datasheet?",
+              options: [
+                "Antes de usar o chip",
+                "Só depois de queimar",
+                "Nunca",
+              ],
+              correct: 0,
+              feedback: {
+                correct: "Muito bem! Sempre leia antes.",
+                wrong: "Não é isso. Sempre leia ANTES de usar.",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 3 ========== */
+        {
+          id: 3,
+          icon: "⚖️",
+          title: "O Juiz do Circuito",
+          subtitle: "O comparador decide",
+          xp: 20,
+          requirements: [],
+          content: `
+      <span class="module-tag">MÓDULO 3 · O JUIZ DO CIRCUITO</span>
+      <h2>O comparador decide</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>O <strong>comparador</strong> é o AmpOp em modo de decisão.</p>
+      <p>Ele olha o sinal de entrada (<strong>Vin</strong>).</p>
+      <p>Ele olha a referência (<strong>Vref</strong>).</p>
+      <p><strong>Se Vin &gt; Vref</strong>, a saída fica <strong>ALTA</strong>.</p>
+      <p><strong>Se Vin &lt; Vref</strong>, a saída fica <strong>BAIXA</strong>.</p>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      <p>A referência é <strong>2,0 V</strong>. Olhe o que acontece quando o sinal muda:</p>
+      <div class="ia">
+        <div class="ia-title">⚖️ Brinque com o comparador</div>
+        <div class="row">
+          <div class="field"><label for="cmpVin">Sinal (Vin): <span class="val" id="cmpVinV">1,0</span> V</label><input type="range" id="cmpVin" min="0" max="3.5" step="0.1" value="1"></div>
+          <div class="field"><label for="cmpVref">Referência (Vref): <span class="val" id="cmpVrefV">2,0</span> V</label><input type="range" id="cmpVref" min="0" max="3.5" step="0.1" value="2"></div>
+        </div>
+        <div id="cmpOut" class="formula" style="background:#fff;padding:1rem;border-radius:8px;font-size:1.05rem;border:2px solid var(--border)"></div>
+      </div>
+
+      <div class="card-warn">
+        <p><strong>⚠️ Problema do ruído:</strong> quando o sinal fica <strong>perto</strong> da referência, o comparador fica <strong>confuso</strong>. Ele muda de ideia muitas vezes. Isso faz o AGV tremer.</p>
+      </div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>É o <strong>juiz</strong> decidindo se a bola passou da linha do gol. Se passar, é gol (SAÍDA ALTA).</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>É o piloto automático decidindo se a altitude está acima ou abaixo do alvo.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É a decisão simples: passou do horário? SIM → fazer. NÃO → esperar.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "Quando o sinal (Vin) é MAIOR que a referência (Vref), a saída fica:",
+              options: ["ALTA", "BAIXA", "No meio"],
+              correct: 0,
+              feedback: {
+                correct: "Isso mesmo! Sinal maior → saída alta.",
+                wrong: "Não é isso. Sinal MAIOR que a referência → saída ALTA.",
+              },
+            },
+            {
+              q: "Por que o AGV treme com ruído?",
+              options: [
+                "O comparador muda de ideia muitas vezes",
+                "O AGV fica com sono",
+                "A linha é torta",
+              ],
+              correct: 0,
+              feedback: {
+                correct: "Exatamente! O ruído confunde o comparador.",
+                wrong:
+                  "Não é isso. O ruído faz o comparador mudar de ideia muitas vezes.",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 4 ========== */
+        {
+          id: 4,
+          icon: "🛡️",
+          title: "Antes de Ligar",
+          subtitle: "Segurança é primeiro",
+          xp: 15,
+          requirements: [
+            {
+              id: "safety",
+              label: "Marcar todos os itens do checklist",
+              check: (u) => u.safetyOk === true,
+            },
+          ],
+          content: `
+      <span class="module-tag">MÓDULO 4 · ANTES DE LIGAR</span>
+      <h2>Segurança é primeiro</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>Antes de ligar um circuito, precisamos <strong>conferir tudo</strong>.</p>
+      <p>Se ligar errado, o chip <strong>queima</strong>.</p>
+      <p>Existe uma regra: <strong>sempre olhe antes de ligar</strong>.</p>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      <p>Olhe 4 erros comuns. Para cada um, escolha a resposta certa:</p>
+      <div class="ia" id="erroList"></div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>É como o jogador <strong>aquecer</strong> antes do jogo. Não pode entrar frio.</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>É o <strong>checklist do piloto</strong> antes de decolar. Todo piloto faz.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É como uma <strong>ordem fixa</strong> antes de começar algo importante.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✋</span> PRATIQUE</div>
+      <div class="card-soft">
+        <p><strong>Checklist de segurança:</strong> marque cada item depois de conferir:</p>
+        <label class="done-chk"><input type="checkbox" data-safety="ci"> O chip está virado do lado certo</label>
+        <label class="done-chk"><input type="checkbox" data-safety="alim"> Vcc e GND estão nos pinos certos</label>
+        <label class="done-chk"><input type="checkbox" data-safety="jumpers"> Todos os fios estão firmes</label>
+        <label class="done-chk"><input type="checkbox" data-safety="fonte"> A fonte está com limite de corrente</label>
+        <label class="done-chk"><input type="checkbox" data-safety="cruzada"> Um colega conferiu também</label>
+        <button class="btn sm" id="safetyDone" style="margin-top:1rem">Salvar checklist</button>
+        <span id="safetyStatus" style="margin-left:.6rem;font-size:.92rem"></span>
+      </div>
+
+      <div class="card-warn">
+        <p><strong>⚠️ Nunca ligue</strong> sem o professor autorizar.</p>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "Quando devemos conferir o circuito?",
+              options: ["Antes de ligar", "Depois de queimar", "Nunca"],
+              correct: 0,
+              feedback: {
+                correct: "Isso mesmo! Sempre ANTES de ligar.",
+                wrong: "Não é isso. Confira ANTES de ligar.",
+              },
+            },
+            {
+              q: "O que acontece se ligar o chip ao contrário?",
+              options: ["Nada", "Ele esquenta e queima", "Ele fica azul"],
+              correct: 1,
+              feedback: {
+                correct: "Exatamente. Ele esquenta e queima.",
+                wrong: "Não é isso. Ele ESQUENTA e QUEIMA.",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 5 ========== */
+        {
+          id: 5,
+          icon: "📏",
+          title: "Medindo com Cuidado",
+          subtitle: "Usando o multímetro",
+          xp: 20,
+          requirements: [
+            {
+              id: "meas",
+              label: "Registrar pelo menos 1 medição",
+              check: (u) => u.measurements.length >= 1,
+            },
+          ],
+          content: `
+      <span class="module-tag">MÓDULO 5 · MEDINDO COM CUIDADO</span>
+      <h2>Usando o multímetro</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>O <strong>multímetro</strong> mede coisas no circuito.</p>
+      <p>Ele mede <strong>tensão</strong> (V), <strong>corrente</strong> (A) e <strong>resistência</strong> (Ω).</p>
+      <p><strong>Tensão</strong> se mede em paralelo (por cima).</p>
+      <p><strong>Corrente</strong> se mede em série (no caminho).</p>
+      <p><strong>Resistência</strong> se mede com o circuito <strong>desligado</strong>.</p>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      <div class="ia">
+        <div class="ia-title">📊 Tela do osciloscópio (mostra o sinal)</div>
+        <div class="row">
+          <div class="field"><label for="osVd">Escala vertical (V/div): <span class="val" id="osVdV">1,0</span></label><input type="range" id="osVd" min="0.5" max="2" step="0.5" value="1"></div>
+          <div class="field"><label for="osTd">Escala horizontal (ms/div): <span class="val" id="osTdV">0,5</span></label><input type="range" id="osTd" min="0.1" max="1" step="0.1" value="0.5"></div>
+        </div>
+        <canvas id="osCanvas" width="600" height="220" aria-label="Tela de osciloscópio mostrando onda quadrada"></canvas>
+        <div id="osCalc" style="margin-top:.8rem;padding:.9rem;background:#fff;border-radius:8px;font-size:.95rem;border:2px solid var(--border)"></div>
+      </div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>O multímetro é como o <strong>cronômetro do juiz</strong>. Mede o tempo com precisão.</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>É o <strong>painel do avião</strong>. Mostra a altitude, a velocidade, a direção.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É o <strong>relógio</strong> que marca cada etapa da rotina.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✋</span> PRATIQUE</div>
+      <div class="card-soft">
+        <p><strong>Registre uma medição de exemplo:</strong></p>
+        <div class="form-grid">
+          <div class="field"><label for="mTP">Onde você mediu?</label><input id="mTP" placeholder="Ex: pino 8"></div>
+          <div class="field"><label for="mVal">Valor medido</label><input id="mVal" type="number" step="0.01" placeholder="Ex: 5"></div>
+          <div class="field"><label for="mUnit">Unidade</label><select id="mUnit"><option>V</option><option>mV</option><option>A</option><option>mA</option><option>Ω</option></select></div>
+          <div class="field"><label for="mExp">Valor esperado</label><input id="mExp" placeholder="Ex: 5 V"></div>
+        </div>
+        <button class="btn sm" id="mAdd" style="margin-top:.8rem">Salvar medição</button>
+        <div id="mList" style="margin-top:1rem"></div>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "Como se mede TENSÃO?",
+              options: [
+                "Em série",
+                "Em paralelo (por cima)",
+                "Com o circuito desligado",
+              ],
+              correct: 1,
+              feedback: {
+                correct: "Isso! Tensão se mede em paralelo.",
+                wrong:
+                  "Não é isso. Tensão se mede em PARALELO (por cima do componente).",
+              },
+            },
+            {
+              q: "Resistência se mede com o circuito:",
+              options: ["Ligado", "Desligado", "Molhado"],
+              correct: 1,
+              feedback: {
+                correct: "Exatamente! Sempre com o circuito DESLIGADO.",
+                wrong:
+                  "Não é isso. Resistência se mede com o circuito DESLIGADO.",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 6 ========== */
+        {
+          id: 6,
+          icon: "🔍",
+          title: "Achando o Problema",
+          subtitle: "Diagnóstico passo a passo",
+          xp: 20,
+          requirements: [
+            {
+              id: "case",
+              label: "Revelar a análise do caso",
+              check: (u) => !!u.reflections.dg_revealed,
+            },
+          ],
+          content: `
+      <span class="module-tag">MÓDULO 6 · ACHANDO O PROBLEMA</span>
+      <h2>Achando o problema</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>Para achar um problema, siga <strong>5 passos</strong>. Sempre na mesma ordem:</p>
+      <ol>
+        <li>Olhe o que está errado.</li>
+        <li>Ache onde está o erro.</li>
+        <li>Meça o que está lá.</li>
+        <li>Compare com o certo.</li>
+        <li>Corrija e teste de novo.</li>
+      </ol>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      <div class="card-warn">
+        <p><strong>Caso real:</strong> o comparador está sempre em ALTO, mas deveria estar em BAIXO.</p>
+        <p>A referência deveria ser <strong>2,0 V</strong>. Mas foi medida <strong>0,5 V</strong>.</p>
+      </div>
+      <div class="ia">
+        <div class="ia-title">🕵️ Investigue o caso</div>
+        <div class="field"><label for="dg1">O que está errado? (sintoma)</label><textarea id="dg1" placeholder="Escreva o que você vê..."></textarea></div>
+        <div class="field"><label for="dg2">O que pode ser a causa?</label><textarea id="dg2" placeholder="Sua ideia..."></textarea></div>
+        <button class="btn sm" id="dgBtn" style="margin-top:.8rem">Revelar resposta</button>
+        <div id="dgOut" class="fb" hidden style="margin-top:.8rem"></div>
+      </div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>É como o técnico olhando o vídeo do jogo para achar o erro do time.</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>É o mecânico olhando o motor para achar a peça quebrada.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É ver qual passo da rotina saiu da ordem e colocar no lugar.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "Qual é o PRIMEIRO passo para achar um problema?",
+              options: [
+                "Trocar o chip",
+                "Ver o que está errado",
+                "Comprar peça nova",
+              ],
+              correct: 1,
+              feedback: {
+                correct: "Isso mesmo! Primeiro OLHE o que está errado.",
+                wrong: "Não é isso. Primeiro OLHE o que está errado.",
+              },
+            },
+            {
+              q: "Se a referência deveria ser 2,0 V mas está 0,5 V, o problema está:",
+              options: ["Na referência", "No sensor", "Na cor do chip"],
+              correct: 0,
+              feedback: {
+                correct: "Exatamente! O problema está na parte da referência.",
+                wrong:
+                  "Não é isso. O problema está na REFERÊNCIA (deveria ser 2,0 V).",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 7 ========== */
+        {
+          id: 7,
+          icon: "📋",
+          title: "Anotando Tudo",
+          subtitle: "Documentar é importante",
+          xp: 15,
+          requirements: [
+            {
+              id: "meas7",
+              label: "Preencher o dossiê com nome e equipe",
+              check: (u) =>
+                !!(u.dossier && u.dossier.equipe && u.dossier.integrantes),
+            },
+          ],
+          content: `
+      <span class="module-tag">MÓDULO 7 · ANOTANDO TUDO</span>
+      <h2>Anotando tudo</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>Quando achar a solução, precisamos <strong>escrever tudo</strong>.</p>
+      <p>Isso se chama <strong>documentação</strong>.</p>
+      <p>Outra pessoa precisa <strong>entender</strong> o que você fez.</p>
+      <p>Anote: o problema, a solução, as medições.</p>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      <p>Vamos preencher uma <strong>ficha técnica</strong>. É como um relatório curto:</p>
+      <div class="ia">
+        <div class="ia-title">📄 Ficha Técnica</div>
+        <div class="form-grid">
+          <div class="field"><label for="dEq">Nome da equipe</label><input id="dEq" placeholder="Ex: Equipe Azul"></div>
+          <div class="field full"><label for="dInt">Integrantes (separe por vírgula)</label><input id="dInt" placeholder="Ex: João, Maria"></div>
+          <div class="field"><label for="dFalha">Qual era o problema?</label><input id="dFalha" placeholder="Ex: referência errada"></div>
+          <div class="field"><label for="dCorr">Como você corrigiu?</label><input id="dCorr" placeholder="Ex: troquei o resistor"></div>
+          <div class="field full"><label for="dRec">O que você recomenda?</label><textarea id="dRec" placeholder="Ex: sempre conferir a referência"></textarea></div>
+        </div>
+        <button class="btn acc sm" id="dSave" style="margin-top:.8rem">💾 Salvar ficha</button>
+        <span id="dStatus" style="margin-left:.6rem;font-size:.92rem"></span>
+      </div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>É a <strong>súmula do jogo</strong>. Registra tudo que aconteceu.</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>É o <strong>diário de bordo</strong>. O piloto anota cada voo.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É o <strong>caderno de anotações</strong> da rotina. Registra cada passo.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "Para que serve a documentação?",
+              options: [
+                "Para enfeitar",
+                "Para outra pessoa entender",
+                "Para esconder",
+              ],
+              correct: 1,
+              feedback: {
+                correct:
+                  "Isso mesmo! Para outra pessoa entender o que você fez.",
+                wrong:
+                  "Não é isso. Documentação serve para OUTRA PESSOA entender.",
+              },
+            },
+            {
+              q: "O que deve ter na ficha técnica?",
+              options: ["O problema e a solução", "Só o nome", "Nada"],
+              correct: 0,
+              feedback: {
+                correct: "Exatamente! O problema E a solução.",
+                wrong: "Não é isso. Deve ter o PROBLEMA e a SOLUÇÃO.",
+              },
+            },
+          ],
+        },
+
+        /* ========== MÓDULO 8 ========== */
+        {
+          id: 8,
+          icon: "🏆",
+          title: "Tudo Junto",
+          subtitle: "O sistema completo",
+          xp: 25,
+          requirements: [],
+          content: `
+      <span class="module-tag">MÓDULO 8 · TUDO JUNTO</span>
+      <h2>Tudo junto</h2>
+
+      <div class="block-title"><span class="ico">📖</span> LEIA</div>
+      <p>Agora juntamos todas as partes. O sistema tem <strong>4 partes</strong>:</p>
+      <ol>
+        <li><strong>Sensor</strong> → olha a linha</li>
+        <li><strong>Buffer</strong> → protege o sensor</li>
+        <li><strong>Filtro</strong> → tira o ruído</li>
+        <li><strong>Comparador</strong> → decide SIM ou NÃO</li>
+      </ol>
+
+      <div class="block-title"><span class="ico">👁️</span> VEJA</div>
+      ${SVG.arquitetura()}
+      <div class="card-ok">
+        <p><strong>✓ Pronto!</strong> O sinal passa pelas 4 partes e vira uma <strong>decisão clara</strong>.</p>
+        <p>O AGV finalmente segue a linha sem tremer.</p>
+      </div>
+
+      <div class="block-title"><span class="ico">🌟</span> EXEMPLOS</div>
+      <div class="interest-grid">
+        <div class="interest-card soccer">
+          <span class="interest-head">⚽</span>
+          <div class="interest-title">Futebol</div>
+          <p>É como um <strong>time completo</strong>: goleiro, zagueiro, meia e atacante. Cada um faz sua parte.</p>
+        </div>
+        <div class="interest-card plane">
+          <span class="interest-head">✈️</span>
+          <div class="interest-title">Avião</div>
+          <p>É a <strong>cabine toda funcionando</strong>: piloto, copiloto, motor, asas. Tudo junto faz o voo.</p>
+        </div>
+        <div class="interest-card order">
+          <span class="interest-head">📖</span>
+          <div class="interest-title">Rotina</div>
+          <p>É a <strong>rotina completa</strong>: cada passo no seu lugar, até o fim.</p>
+        </div>
+      </div>
+
+      <div class="block-title"><span class="ico">✋</span> PRATIQUE</div>
+      <div class="card-soft">
+        <p><strong>Coloque as partes na ordem certa:</strong> (verifique sua resposta)</p>
+        <div id="ordemJogo" style="display:grid;gap:.5rem;margin-top:.8rem"></div>
+      </div>
+
+      <div class="block-title"><span class="ico">✅</span> RESPONDA</div>`,
+          quiz: [
+            {
+              q: "Qual é a ordem certa do sistema?",
+              options: [
+                "Sensor → Buffer → Filtro → Comparador",
+                "Comparador → Sensor → Buffer → Filtro",
+                "Filtro → Sensor → Comparador → Buffer",
+              ],
+              correct: 0,
+              feedback: {
+                correct: "Isso! Essa é a ordem certa.",
+                wrong:
+                  "Não é isso. A ordem é: Sensor → Buffer → Filtro → Comparador.",
+              },
+            },
+            {
+              q: "Para que serve o filtro?",
+              options: [
+                "Tirar o ruído",
+                "Enfeitar o circuito",
+                "Fazer barulho",
+              ],
+              correct: 0,
+              feedback: {
+                correct: "Exatamente! O filtro tira o ruído.",
+                wrong: "Não é isso. O filtro TIRA O RUÍDO.",
+              },
+            },
+          ],
+        },
+      ];
+
+      /* ==================== ESTADO ==================== */
+      function getInitialState() {
+        return {
+          student: {
+            name: "",
+            xp: 0,
+            badges: [],
+            completed: [],
+            quizScores: {},
+            answeredQs: {},
+            measurements: [],
+            dossier: {},
+            reflections: {},
+            safetyChecks: {},
+            safetyOk: false,
+            certificateDate: null,
+          },
+          view: "dashboard",
+          currentModule: null,
+        };
+      }
+
+      let state = loadState();
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return getInitialState();
+          const s = JSON.parse(raw);
+          const base = getInitialState();
+          const st = Object.assign(base, s, {
+            student: Object.assign(base.student, s.student || {}),
+          });
+          const V = ["dashboard", "map", "module", "certificate"];
+          if (!V.includes(st.view)) st.view = "dashboard";
+          if (
+            st.view === "module" &&
+            !(
+              Number.isInteger(st.currentModule) &&
+              st.currentModule >= 0 &&
+              st.currentModule < MODULES.length
+            )
+          )
+            st.view = "map";
+          return st;
+        } catch (e) {
+          return getInitialState();
+        }
+      }
+      function save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {}
+        clearTimeout(window._saveT);
+        window._saveT = setTimeout(flashSave, 300);
+      }
+
+      /* ==================== HELPERS ==================== */
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+      const esc = (s) =>
+        String(s == null ? "" : s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      const student = () => state.student;
+      const displayName = () =>
+        state.student.name && state.student.name.trim()
+          ? state.student.name.trim()
+          : "Aluno(a)";
+
+      function levelFor(xp) {
+        let lvl = LEVELS[0];
+        for (const l of LEVELS) if (xp >= l.min) lvl = l;
+        return lvl;
+      }
+      function nextLevel(xp) {
+        for (const l of LEVELS) if (xp < l.min) return l;
+        return null;
+      }
+
+      function flashSave() {
+        let el = document.getElementById("saveIndicator");
+        if (!el) {
+          el = document.createElement("div");
+          el.id = "saveIndicator";
+          el.className = "save-indicator";
+          document.body.appendChild(el);
+        }
+        el.textContent = "✓ Salvo";
+        el.style.opacity = "1";
+        clearTimeout(el._t);
+        el._t = setTimeout(() => (el.style.opacity = "0"), 1800);
+      }
+
+      function showToast(msg) {
+        const t = document.createElement("div");
+        t.className = "toast";
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => {
+          t.style.opacity = "0";
+          t.style.transition = "opacity .4s";
+          setTimeout(() => t.remove(), 400);
+        }, 2500);
+      }
+
+      function awardXP(a) {
+        state.student.xp = (state.student.xp || 0) + a;
+        save();
+      }
+      function giveBadge(id) {
+        if (!state.student.badges.includes(id)) {
+          state.student.badges.push(id);
+          save();
+          showToast("🏅 Medalha: " + BADGES[id].name);
+        }
+      }
+
+      function getRequirements(mod) {
+        return [
+          {
+            id: "quiz",
+            label: `Acerte as ${mod.quiz.length} perguntas`,
+            check: (u, m) =>
+              (u.answeredQs[m.id] || []).length === m.quiz.length,
+          },
+          ...(mod.requirements || []),
+        ];
+      }
+      function checkRequirements(mod) {
+        return getRequirements(mod).map((r) => ({
+          label: r.label,
+          done: r.check(state.student, mod),
+        }));
+      }
+
+      /* ==================== RENDER ==================== */
+      function renderHeader() {
+        return `
+    <header class="topbar">
+      <div class="brand"><div class="logo">⚡</div><div>OPERAÇÃO AGV<small>Versão acessível</small></div></div>
+      <nav class="nav">
+        <button data-nav="dashboard" class="${state.view === "dashboard" ? "active" : ""}">🏠 Início</button>
+        <button data-nav="map" class="${state.view === "map" || state.view === "module" ? "active" : ""}">📚 Módulos</button>
+        ${state.student.completed.length === MODULES.length ? `<button data-nav="certificate" class="${state.view === "certificate" ? "active" : ""}">🏆 Certificado</button>` : ""}
+      </nav>
+    </header>`;
+      }
+
+      function renderDashboard() {
+        const u = student();
+        const lvl = levelFor(u.xp);
+        const next = nextLevel(u.xp);
+        const span = next ? next.min - lvl.min : 1;
+        const prog = next
+          ? Math.min(100, Math.round(((u.xp - lvl.min) / span) * 100))
+          : 100;
+        return `
+    <div class="hero">
+      <h2>👋 Olá! Vamos aprender juntos</h2>
+      <p>Vou te ajudar a consertar o AGV.</p>
+      <div class="name-box">
+        <label for="studentName">Seu nome:</label>
+        <input id="studentName" placeholder="Digite seu nome" value="${esc(u.name)}" maxlength="60">
+      </div>
+      <p style="font-size:.95rem;margin-top:.6rem"><strong>${esc(lvl.name)}</strong> · ${u.xp} XP</p>
+      <div class="xpbar"><div style="width:${prog}%"></div></div>
+    </div>
+
+    <div class="grid-stats">
+      <div class="stat"><div class="num">${u.completed.length}/${MODULES.length}</div><div class="lbl">Módulos feitos</div></div>
+      <div class="stat"><div class="num">${u.badges.length}</div><div class="lbl">Medalhas</div></div>
+      <div class="stat"><div class="num">${u.xp}</div><div class="lbl">XP total</div></div>
+    </div>
+
+    ${
+      u.completed.length === MODULES.length
+        ? `
+      <div class="card-ok" style="text-align:center">
+        <h2>🏆 Você terminou!</h2>
+        <p>Parabéns! Você completou todos os módulos.</p>
+        <button class="btn acc" data-nav="certificate">Ver meu certificado</button>
+      </div>
+    `
+        : ""
+    }
+
+    <div class="card">
+      <h2>Próximo passo</h2>
+      <p class="muted">O que fazer agora:</p>
+      ${nextModuleCard(u)}
+    </div>
+
+    <div class="card">
+      <h2>Suas medalhas</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.8rem">
+        ${Object.keys(BADGES)
+          .map((b) => {
+            const has = u.badges.includes(b);
+            return `<div class="badge ${has ? "" : "locked"}" style="text-align:center;padding:1rem .6rem;border:2px solid ${has ? "var(--success)" : "var(--border)"};border-radius:10px;background:${has ? "var(--soft-green)" : "#f5f5f5"};opacity:${has ? "1" : ".45"}">
+            <div style="font-size:1.8rem">${BADGES[b].icon}</div>
+            <div style="font-weight:700;font-size:.85rem;margin-top:.3rem">${BADGES[b].name}</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem;line-height:1.3">${has ? "✓ conquistada" : "Como: " + esc(BADGES[b].how)}</div>
+          </div>`;
+          })
+          .join("")}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Opções</h2>
+      <p class="muted">Se precisar, use o botão abaixo para começar de novo.</p>
+      <button class="btn ghost sm" id="resetBtn">🔄 Começar de novo (apaga o progresso)</button>
+    </div>
+  `;
+      }
+
+      function nextModuleCard(u) {
+        const next = MODULES.find((m) => !u.completed.includes(m.id));
+        if (!next)
+          return `<div class="callout ok">🏁 Todos os módulos concluídos!</div>`;
+        return `
+    <div class="mod-card available" data-openmod="${next.id}" style="margin-top:.6rem">
+      <div class="mod-icon">${next.icon}</div>
+      <div class="mod-info">
+        <h4>Módulo ${next.id}: ${esc(next.title)}</h4>
+        <p class="mod-sub">${esc(next.subtitle)}</p>
+        <span class="mod-badge">${next.xp} XP</span>
+      </div>
+      <div style="font-size:1.8rem">➡️</div>
+    </div>`;
+      }
+
+      function renderMap() {
+        const u = student();
+        return `
+    <div class="card">
+      <h2>📚 Todos os módulos</h2>
+      <p class="muted">${u.completed.length} de ${MODULES.length} concluídos</p>
+      <p>Faça um módulo de cada vez. Do começo ao fim.</p>
+    </div>
+    <div class="grid-mod">
+      ${MODULES.map((m, idx) => {
+        const done = u.completed.includes(m.id);
+        const prevDone = idx === 0 || u.completed.includes(MODULES[idx - 1].id);
+        const unlocked = prevDone || done;
+        let cls = "locked";
+        if (done) cls = "done";
+        else if (unlocked) cls = "available";
+        return `
+          <button class="mod-card ${cls}" ${unlocked ? `data-openmod="${m.id}"` : 'disabled aria-disabled="true"'}>
+            <div class="mod-icon">${m.icon}</div>
+            <div class="mod-info">
+              <h4>Módulo ${m.id}: ${esc(m.title)}</h4>
+              <p class="mod-sub">${esc(m.subtitle)}</p>
+              <span class="mod-badge">${done ? "✓ CONCLUÍDO" : unlocked ? m.xp + " XP" : "🔒 BLOQUEADO"}</span>
+            </div>
+            <div style="font-size:1.5rem">${done ? "✓" : unlocked ? "➡️" : "🔒"}</div>
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+      }
+
+      function renderModule(id) {
+        const m = MODULES.find((x) => x.id === id);
+        const u = student();
+        if (!m) return "<p>Módulo não encontrado.</p>";
+        const done = u.completed.includes(id);
+        const isLast = id === MODULES.length - 1;
+        return `
+    <div class="lesson">
+      <div class="step-ribbon">
+        <span class="step done">📖 Leia</span>
+        <span class="step done">👁️ Veja</span>
+        <span class="step done">🌟 Exemplos</span>
+        <span class="step done">✋ Pratique</span>
+        <span class="step current">✅ Responda</span>
+      </div>
+      ${m.content}
+    </div>
+    <div class="card">
+      <h2>✅ Perguntas do módulo</h2>
+      <p class="muted">Responda as ${m.quiz.length} perguntas. Você pode tentar de novo se errar.</p>
+      ${m.hint ? `<details style="margin:.8rem 0"><summary style="cursor:pointer;font-weight:700;color:var(--accent-d);padding:.6rem 0">💡 Dica</summary><div class="hint-box">${esc(m.hint)}</div></details>` : ""}
+      <div id="quizArea"></div>
+      <div id="reqArea"></div>
+      <div class="tp-nav">
+        <button class="btn ghost" data-nav="map">← Voltar</button>
+        ${
+          done
+            ? `<button class="btn acc" data-nav="next-from-${id}">${isLast ? "🏆 Ver certificado" : "Próximo módulo ➡️"}</button>`
+            : `<button class="btn acc" id="finishMod" disabled>${isLast ? "Concluir e ver certificado" : "Concluir e ir para o próximo"}</button>`
+        }
+      </div>
+    </div>
+  `;
+      }
+
+      function renderQuiz(moduleId) {
+        const m = MODULES.find((x) => x.id === moduleId);
+        const u = student();
+        const container = $("#quizArea");
+        if (!container) return;
+
+        const cumSolved = (u.answeredQs[moduleId] || []).length;
+
+        container.innerHTML =
+          m.quiz
+            .map((q, i) => {
+              const alreadyCorrect = (u.answeredQs[moduleId] || []).includes(i);
+              return `
+      <fieldset class="quiz-q" data-q="${i}">
+        <legend class="qtext">${i + 1}. ${esc(q.q)}</legend>
+        <div role="radiogroup">
+          ${q.options
+            .map((o, j) => {
+              const isCorrect = j === q.correct;
+              const cls = alreadyCorrect && isCorrect ? "correct" : "";
+              return `<button class="quiz-opt ${cls}" data-qidx="${i}" data-oidx="${j}" ${alreadyCorrect ? 'disabled aria-disabled="true"' : ""}>${esc(o)}</button>`;
+            })
+            .join("")}
+        </div>
+        ${alreadyCorrect ? `<div class="fb ok">✓ Esta pergunta já foi respondida.</div>` : `<div class="fb" hidden></div>`}
+      </fieldset>`;
+            })
+            .join("") +
+          `
+    <div class="card-soft" style="text-align:center;margin-top:.8rem">
+      <strong style="font-size:1.1rem">Progresso: <span id="qProg">${cumSolved}</span>/${m.quiz.length}</strong>
+    </div>`;
+
+        container
+          .querySelectorAll(".quiz-opt:not([disabled])")
+          .forEach((btn) => {
+            btn.onclick = () => {
+              const qi = +btn.dataset.qidx,
+                oi = +btn.dataset.oidx;
+              const q = m.quiz[qi];
+              const wrap = btn.closest(".quiz-q");
+              if (wrap.dataset.solved === "1") return;
+
+              const cur = u.quizScores[moduleId] || {
+                best: cumSolved,
+                total: m.quiz.length,
+                attempts: 0,
+              };
+              cur.attempts = (cur.attempts || 0) + 1;
+              cur.total = m.quiz.length;
+              u.quizScores[moduleId] = cur;
+
+              const ok = oi === q.correct;
+              const fb = wrap.querySelector(".fb");
+              fb.hidden = false;
+
+              if (ok) {
+                wrap.dataset.solved = "1";
+                wrap.querySelectorAll(".quiz-opt").forEach((b, idx) => {
+                  b.disabled = true;
+                  if (idx === q.correct) b.classList.add("correct");
+                });
+                fb.className = "fb ok";
+
+                const wasNew = !(u.answeredQs[moduleId] || []).includes(qi);
+                u.answeredQs[moduleId] = u.answeredQs[moduleId] || [];
+                if (wasNew) {
+                  u.answeredQs[moduleId].push(qi);
+                  awardXP(XP_PER_CORRECT);
+                }
+                cur.best = u.answeredQs[moduleId].length;
+                u.quizScores[moduleId] = cur;
+
+                fb.innerHTML =
+                  "✓ " +
+                  esc(q.feedback.correct) +
+                  (wasNew
+                    ? ' <span style="background:var(--accent);color:#fff;padding:.15rem .6rem;border-radius:20px;font-size:.82rem;font-weight:700;margin-left:.4rem">+' +
+                      XP_PER_CORRECT +
+                      " XP</span>"
+                    : "");
+                $("#qProg").textContent = u.answeredQs[moduleId].length;
+
+                const BM = {
+                  0: "primeiro_passo",
+                  1: "leitor_atento",
+                  2: "olho_tecnico",
+                  3: "juiz_eletronico",
+                };
+                if (
+                  BM[moduleId] &&
+                  u.answeredQs[moduleId].length === m.quiz.length
+                )
+                  giveBadge(BM[moduleId]);
+                save();
+                updateCompletionUI(moduleId);
+              } else {
+                btn.disabled = true;
+                btn.classList.add("wrong");
+                fb.className = "fb no";
+                fb.innerHTML =
+                  "✗ " +
+                  esc(q.feedback.wrong) +
+                  ' <button class="btn sm" style="margin-left:.6rem" data-retry="' +
+                  qi +
+                  '">Tentar de novo</button>';
+                fb.querySelector("[data-retry]").onclick = () => {
+                  wrap.querySelectorAll(".quiz-opt").forEach((b) => {
+                    b.disabled = false;
+                    b.classList.remove("wrong", "correct");
+                  });
+                  fb.hidden = true;
+                  fb.className = "fb";
+                  fb.innerHTML = "";
+                };
+                save();
+              }
+            };
+          });
+      }
+
+      function updateCompletionUI(moduleId) {
+        const mod = MODULES[moduleId];
+        if (!mod) return;
+        const reqs = checkRequirements(mod);
+        const allDone = reqs.every((r) => r.done);
+        const area = $("#reqArea");
+        if (area) {
+          area.innerHTML = `
+      <div class="req-list">
+        <div class="req-title">Para concluir este módulo:</div>
+        ${reqs
+          .map(
+            (r) => `
+          <div class="req-item ${r.done ? "ok" : ""}">
+            <span class="req-ic">${r.done ? "✓" : "○"}</span>
+            <span>${esc(r.label)}</span>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>`;
+        }
+        const btn = $("#finishMod");
+        if (btn) {
+          btn.disabled = !allDone;
+          btn.style.opacity = allDone ? "1" : ".5";
+        }
+      }
+
+      function renderCertificate() {
+        const u = student();
+        if (u.completed.length !== MODULES.length) {
+          return `
+      <div class="card">
+        <h2>🏆 Certificado</h2>
+        <p>O certificado é liberado quando todos os módulos estiverem concluídos.</p>
+        <p class="muted">Você completou ${u.completed.length} de ${MODULES.length} módulos.</p>
+        <button class="btn ghost" data-nav="map">← Voltar aos módulos</button>
+      </div>`;
+        }
+        if (!u.certificateDate) {
+          u.certificateDate = new Date().toISOString();
+          save();
+        }
+        const d = new Date(u.certificateDate);
+        const dateStr = d.toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        });
+        const lvl = levelFor(u.xp);
+        const nm = displayName();
+        const nc = nm.length > 46 ? "sm" : nm.length > 30 ? "md" : "";
+
+        return `
+    <div class="cert-toolbar no-print">
+      <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
+        <label for="certName" style="font-weight:700">Nome no certificado:</label>
+        <input type="text" id="certName" value="${esc(u.name)}" placeholder="Digite seu nome completo" maxlength="60">
+      </div>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+        <button class="btn ghost sm" data-nav="dashboard">← Início</button>
+        <button class="btn acc" id="printCert">🖨️ Imprimir</button>
+      </div>
+      <div class="print-warning">⚠️ Na impressão: escolha <strong>A4 paisagem</strong> e margens em <strong>Nenhuma</strong>.</div>
+    </div>
+
+    <div class="cert-wrap">
+      <div class="cert">
+        <div class="cert-frame">
+          <div class="cert-corner tl"></div><div class="cert-corner tr"></div>
+          <div class="cert-corner bl"></div><div class="cert-corner br"></div>
+
+          <div>
+            <div class="cert-logo">SENAI</div>
+            <div class="cert-title">CERTIFICADO</div>
+            <div class="cert-subtitle">DE CONCLUSÃO</div>
+          </div>
+
+          <div class="cert-body">
+            <div class="lbl">Certificamos que</div>
+            <div id="certNameOut" class="cert-name ${nc}">${esc(nm)}</div>
+            <div class="lbl">concluiu a atividade</div>
+            <div class="cert-course">OPERAÇÃO AGV — VERSÃO ACESSÍVEL</div>
+            <div class="cert-detail"><strong>Aprendizagem adaptada de Amplificadores Operacionais</strong></div>
+            <div class="cert-detail">Curso: Técnico em Mecatrônica — 2º ano</div>
+            <div class="cert-detail">Unidade Curricular: Sistemas Eletrônicos</div>
+            <div class="cert-detail" style="margin-top:.9cqw">
+              <strong>Conquista:</strong> ${u.completed.length} de ${MODULES.length} módulos · ${u.xp} XP · ${u.badges.length} medalhas
+            </div>
+          </div>
+
+          <div class="cert-sig-row">
+            <div class="cert-sig"><div class="line"></div><div class="name">Prof. Rútilo Hahn</div><div class="role">Instrutor responsável</div></div>
+            <div class="cert-sig"><div class="line"></div><div class="name">Coordenação SENAI</div><div class="role">Educação Profissional</div></div>
+          </div>
+
+          <div class="cert-foot">
+            <div class="cert-seal">SENAI · Educação Profissional</div>
+            <div class="cert-meta">Emitido em <strong>${dateStr}</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+      }
+
+      function render() {
+        const root = $("#root");
+        let body = "";
+        const view = state.view || "dashboard";
+        switch (view) {
+          case "dashboard":
+            body = renderDashboard();
+            break;
+          case "map":
+            body = renderMap();
+            break;
+          case "module":
+            body = renderModule(state.currentModule);
+            break;
+          case "certificate":
+            body = renderCertificate();
+            break;
+          default:
+            body = renderDashboard();
+        }
+        root.innerHTML = renderHeader() + `<main class="main">${body}</main>`;
+        bindGlobal();
+        bindView();
+        window.scrollTo(0, 0);
+      }
+
+      /* ==================== BINDINGS ==================== */
+      function bindGlobal() {
+        $$("[data-nav]").forEach((el) => {
+          el.onclick = () => {
+            const v = el.dataset.nav;
+            if (v.startsWith("next-from-")) {
+              const cur = +v.replace("next-from-", "");
+              const next = cur + 1;
+              if (next < MODULES.length) {
+                state.currentModule = next;
+                state.view = "module";
+              } else {
+                state.view = "certificate";
+              }
+            } else {
+              state.view = v;
+            }
+            save();
+            render();
+          };
+        });
+        $$("[data-openmod]").forEach((el) => {
+          el.onclick = () => {
+            state.currentModule = +el.dataset.openmod;
+            state.view = "module";
+            save();
+            render();
+          };
+        });
+        const nameIn = $("#studentName");
+        if (nameIn)
+          nameIn.oninput = () => {
+            state.student.name = nameIn.value;
+            save();
+          };
+        const certName = $("#certName");
+        if (certName)
+          certName.oninput = () => {
+            state.student.name = certName.value;
+            save();
+            const el = $("#certNameOut");
+            if (el) {
+              const n = displayName();
+              el.textContent = n;
+              el.className =
+                "cert-name " +
+                (n.length > 46 ? "sm" : n.length > 30 ? "md" : "");
+            }
+          };
+        const printBtn = $("#printCert");
+        if (printBtn)
+          printBtn.onclick = () => {
+            if (!state.student.name.trim()) {
+              showToast("Coloque seu nome antes de imprimir.");
+              if (certName) certName.focus();
+              return;
+            }
+            window.print();
+          };
+        const resetBtn = $("#resetBtn");
+        if (resetBtn)
+          resetBtn.onclick = () => {
+            if (!confirm("Isso apaga TUDO. Tem certeza?")) return;
+            localStorage.removeItem(STORAGE_KEY);
+            state = getInitialState();
+            state.view = "dashboard";
+            save();
+            render();
+            showToast("Recomeçando do zero");
+          };
+      }
+
+      function bindView() {
+        if (state.view === "module") {
+          const fn = SETUP[state.currentModule];
+          if (fn) fn();
+          renderQuiz(state.currentModule);
+          updateCompletionUI(state.currentModule);
+          const fb = $("#finishMod");
+          if (fb)
+            fb.onclick = () => {
+              const cur = state.currentModule;
+              const u = student();
+              const mod = MODULES[cur];
+              const reqs = checkRequirements(mod);
+              const unmet = reqs.filter((r) => !r.done);
+              if (unmet.length) {
+                showToast("Falta: " + unmet.map((r) => r.label).join(" · "));
+                return;
+              }
+              if (!u.completed.includes(cur)) {
+                u.completed.push(cur);
+                const BM = {
+                  0: "primeiro_passo",
+                  1: "leitor_atento",
+                  2: "olho_tecnico",
+                  3: "juiz_eletronico",
+                  4: "montador_cuidadoso",
+                  5: "medidor_preciso",
+                  6: "detetive",
+                  7: "documentador",
+                  8: "integrador",
+                };
+                if (BM[cur]) giveBadge(BM[cur]);
+                awardXP(mod.xp);
+                if (cur === MODULES.length - 1)
+                  u.certificateDate =
+                    u.certificateDate || new Date().toISOString();
+                save();
+              }
+              const next = cur + 1;
+              if (next < MODULES.length) {
+                state.currentModule = next;
+                state.view = "module";
+              } else {
+                state.view = "certificate";
+              }
+              save();
+              render();
+            };
+        }
+      }
+
+      /* ==================== SETUP POR MÓDULO ==================== */
+      const SETUP = {};
+
+      SETUP[0] = function () {
+        const u = student();
+        ["pre1", "pre2"].forEach((id) => {
+          const el = $("#" + id);
+          if (!el) return;
+          el.value = u.reflections[id] || "";
+          el.oninput = () => {
+            u.reflections[id] = el.value;
+            save();
+          };
+        });
+        const b = $("#savePre");
+        if (b)
+          b.onclick = () => {
+            ["pre1", "pre2"].forEach((id) => {
+              const el = $("#" + id);
+              if (el) u.reflections[id] = el.value;
+            });
+            save();
+            $("#preStatus").textContent = "✓ Salvo";
+            flashSave();
+          };
+      };
+
+      SETUP[1] = function () {
+        const info = {
+          "vin+":
+            "A entrada + recebe o sinal que será comparado. Ele fica do mesmo lado (não inverte).",
+          "vin-": "A entrada − também recebe sinal, mas ela inverte o sinal.",
+          vout: "A saída mostra o resultado. Pode ser ALTA (perto de 5 V) ou BAIXA (perto de 0 V).",
+          vcc: "A alimentação dá energia ao chip. Pino 8 é positivo. Pino 4 é negativo (GND).",
+        };
+        $$("[data-term]").forEach((b) => {
+          b.onclick = () => {
+            $("#termInfo").textContent = info[b.dataset.term] || "";
+          };
+        });
+      };
+
+      SETUP[2] = function () {
+        const dsContent = {
+          pin: `<h4>1. Pinagem</h4><p>Mostra o que cada perninha faz. O pino 1 fica do lado do chanfro (a marca no topo do chip).</p><table class="table"><tr><th>Pino</th><th>O que faz</th></tr><tr><td>1</td><td>Saída 1</td></tr><tr><td>2</td><td>Entrada − 1</td></tr><tr><td>3</td><td>Entrada + 1</td></tr><tr><td>4</td><td>GND (negativo)</td></tr><tr><td>8</td><td>Vcc+ (positivo)</td></tr></table>`,
+          vcc: `<h4>2. Energia</h4><p>O chip precisa de energia para funcionar. Normalmente usa 5 V. Ele aguenta de 3 V até 32 V.</p><div class="card-warn" style="margin:.6rem 0;padding:.8rem 1rem"><strong>⚠️ Atenção:</strong> o chip NÃO chega aos 5 V na saída. Ele para em uns 3,5 V.</div>`,
+          out: `<h4>3. Saída</h4><p>A saída do chip dá pouca corrente. Serve só para avisar outro chip. Não pode ligar motor direto.</p>`,
+          temp: `<h4>4. Temperatura</h4><p>O chip funciona bem em temperatura ambiente. Se esquentar muito, tem algo errado. Desligue e confira.</p>`,
+        };
+        $$(".ds-tabs button").forEach((b) => {
+          b.onclick = () => {
+            $$(".ds-tabs button").forEach((x) => x.classList.remove("active"));
+            b.classList.add("active");
+            const body = $("#dsBody");
+            if (body) body.innerHTML = dsContent[b.dataset.ds] || "";
+          };
+        });
+        const db = $("#dsBody");
+        if (db) db.innerHTML = dsContent.pin;
+
+        const chk = $("#dsCheck");
+        if (chk)
+          chk.onclick = () => {
+            const v = $("#dsRef").value.trim();
+            const fb = $("#dsFb");
+            fb.hidden = false;
+            if (/^8$/.test(v)) {
+              fb.className = "fb ok";
+              fb.textContent = "✓ Isso mesmo! O pino 8 é o Vcc+ (positivo).";
+              giveBadge("olho_tecnico");
+              save();
+            } else {
+              fb.className = "fb no";
+              fb.textContent =
+                "✗ Não é esse. Olhe a tabela: qual pino recebe a energia positiva?";
+            }
+          };
+      };
+
+      SETUP[3] = function () {
+        const vin = $("#cmpVin"),
+          vref = $("#cmpVref"),
+          out = $("#cmpOut");
+        if (!vin || !vref || !out) return;
+        const update = () => {
+          const v1 = parseFloat(vin.value),
+            v2 = parseFloat(vref.value);
+          $("#cmpVinV").textContent = v1.toFixed(1).replace(".", ",");
+          $("#cmpVrefV").textContent = v2.toFixed(1).replace(".", ",");
+          let txt, cor;
+          if (Math.abs(v1 - v2) < 0.1) {
+            txt = "🤔 INSTÁVEL (perto do limiar)";
+            cor = "#B55E2E";
+          } else if (v1 > v2) {
+            txt = "✅ SAÍDA ALTA (SIM)";
+            cor = "#4A8B3A";
+          } else {
+            txt = "⛔ SAÍDA BAIXA (NÃO)";
+            cor = "#A83232";
+          }
+          out.innerHTML = `Sinal: ${v1.toFixed(1)} V · Referência: ${v2.toFixed(1)} V<br><strong style="color:${cor};font-size:1.15rem">${txt}</strong>`;
+        };
+        vin.oninput = update;
+        vref.oninput = update;
+        update();
+      };
+
+      SETUP[4] = function () {
+        const u = student();
+        const scenarios = [
+          {
+            desc: "O chip está virado ao contrário. Ele esquenta muito.",
+            options: ["Chip invertido", "Fio solto", "Está tudo certo"],
+            correct: 0,
+            feedback: "Isso! Chip invertido faz ele esquentar.",
+          },
+          {
+            desc: "A energia está no pino 4 (que é GND) e o GND está no pino 8.",
+            options: ["Chip invertido", "Energia invertida", "Está tudo certo"],
+            correct: 1,
+            feedback: "Isso! A energia está invertida.",
+          },
+          {
+            desc: "Um fio que liga o pino 2 ao terra está solto.",
+            options: ["Energia invertida", "Fio solto", "Chip queimado"],
+            correct: 1,
+            feedback: "Isso! Fio solto atrapalha o circuito.",
+          },
+          {
+            desc: "Dois fios estão encostados um no outro. A fonte limita a corrente.",
+            options: ["Está tudo certo", "Curto entre fios", "Chip virado"],
+            correct: 1,
+            feedback: "Isso! Dois fios encostados formam um curto.",
+          },
+        ];
+        const wrap = $("#erroList");
+        if (wrap) {
+          wrap.innerHTML = scenarios
+            .map(
+              (s, idx) => `
+      <div class="ia" data-scen="${idx}">
+        <p style="font-weight:700;margin-bottom:.6rem">Cenário ${idx + 1}: ${esc(s.desc)}</p>
+        <div role="radiogroup" style="display:grid;gap:.4rem">
+          ${s.options.map((o, j) => `<button class="quiz-opt" data-scen="${idx}" data-opt="${j}">${esc(o)}</button>`).join("")}
+        </div>
+        <div class="fb" hidden></div>
+      </div>
+    `,
+            )
+            .join("");
+          wrap.querySelectorAll("[data-opt]").forEach((b) => {
+            b.onclick = () => {
+              const sIdx = +b.dataset.scen,
+                oIdx = +b.dataset.opt;
+              const s = scenarios[sIdx];
+              const sc = b.closest("[data-scen]");
+              if (sc.dataset.solved === "1") return;
+              const fb = sc.querySelector(".fb");
+              fb.hidden = false;
+              const ok = oIdx === s.correct;
+              if (ok) {
+                sc.dataset.solved = "1";
+                sc.querySelectorAll("[data-opt]").forEach((x, j) => {
+                  x.disabled = true;
+                  if (j === s.correct) x.classList.add("correct");
+                });
+                fb.className = "fb ok";
+                fb.textContent = "✓ " + s.feedback;
+              } else {
+                b.disabled = true;
+                b.classList.add("wrong");
+                fb.className = "fb no";
+                fb.textContent = "✗ Não é essa. Tente outra opção.";
+              }
+              save();
+            };
+          });
+        }
+        $$("[data-safety]").forEach((chk) => {
+          chk.checked = u.safetyChecks
+            ? !!u.safetyChecks[chk.dataset.safety]
+            : false;
+          chk.onchange = () => {
+            u.safetyChecks = u.safetyChecks || {};
+            u.safetyChecks[chk.dataset.safety] = chk.checked;
+            save();
+          };
+        });
+        const sd = $("#safetyDone");
+        if (sd)
+          sd.onclick = () => {
+            const all = $$("[data-safety]").every((c) => c.checked);
+            if (all) {
+              u.safetyOk = true;
+              giveBadge("montador_cuidadoso");
+              $("#safetyStatus").textContent = "✓ Checklist salvo!";
+              save();
+              updateCompletionUI(4);
+            } else {
+              $("#safetyStatus").textContent = "⚠ Falta marcar algum item.";
+            }
+          };
+      };
+
+      SETUP[5] = function () {
+        const vd = $("#osVd"),
+          td = $("#osTd"),
+          cv = $("#osCanvas"),
+          calc = $("#osCalc");
+        if (!cv) return;
+        const draw = () => {
+          const Vd = parseFloat(vd.value),
+            Td = parseFloat(td.value);
+          $("#osVdV").textContent = Vd.toFixed(1).replace(".", ",");
+          $("#osTdV").textContent = Td.toFixed(1).replace(".", ",");
+          const ctx = cv.getContext("2d");
+          const W = cv.width,
+            H = cv.height;
+          ctx.fillStyle = "#1a2530";
+          ctx.fillRect(0, 0, W, H);
+          ctx.strokeStyle = "#2a4055";
+          for (let i = 1; i < 10; i++) {
+            const x = (W / 10) * i;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, H);
+            ctx.stroke();
+          }
+          for (let i = 1; i < 8; i++) {
+            const y = (H / 8) * i;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(W, y);
+            ctx.stroke();
+          }
+          const period_ms = 0.5;
+          const totalTime = 10 * Td;
+          const periodsVisible = totalTime / period_ms;
+          const mid = H / 2;
+          const amp = 2.5;
+          const divsY = amp / Vd;
+          const pxPerDiv = H / 8;
+          const dv = Math.min(divsY, 3.9);
+          const yHigh = mid - dv * pxPerDiv;
+          const yLow = mid + dv * pxPerDiv;
+          ctx.strokeStyle = "#F2A66A";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          const periodPx = W / periodsVisible;
+          for (let x = 0; x < W; x++) {
+            const ph = (x % periodPx) / periodPx;
+            const y = ph < 0.5 ? yHigh : yLow;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          if (calc) {
+            const f = 1 / (period_ms / 1000);
+            calc.innerHTML = `📊 <strong>Amplitude:</strong> ~${amp} V (${(amp / Vd).toFixed(1)} divisões × ${Vd} V/div)<br>⏱️ <strong>Período:</strong> ${period_ms} ms · <strong>Frequência:</strong> ${f.toFixed(0)} Hz${divsY > 3.9 ? '<br><strong style="color:#A83232">⚠ Sinal saiu da tela. Aumente V/div.</strong>' : ""}`;
+          }
+        };
+        vd.oninput = draw;
+        td.oninput = draw;
+        draw();
+
+        const u = student();
+        renderMeasurements();
+        const ma = $("#mAdd");
+        if (ma)
+          ma.onclick = () => {
+            const tp = $("#mTP").value.trim(),
+              val = $("#mVal").value.trim();
+            if (!tp || !val) {
+              showToast("Preencha onde mediu e o valor.");
+              return;
+            }
+            u.measurements.push({
+              id: Date.now(),
+              tp,
+              val,
+              unit: $("#mUnit").value,
+              exp: $("#mExp").value,
+            });
+            ["#mTP", "#mVal", "#mExp"].forEach((s) => {
+              const el = $(s);
+              if (el) el.value = "";
+            });
+            giveBadge("medidor_preciso");
+            save();
+            renderMeasurements();
+            updateCompletionUI(5);
+          };
+      };
+
+      function renderMeasurements() {
+        const u = student();
+        const list = $("#mList");
+        if (!list) return;
+        if (!u.measurements.length) {
+          list.innerHTML = '<p class="empty">Nenhuma medição ainda.</p>';
+          return;
+        }
+        list.innerHTML = `<table class="table"><tr><th>Onde</th><th>Valor</th><th>Esperado</th><th></th></tr>
+    ${u.measurements.map((m) => `<tr><td>${esc(m.tp)}</td><td>${esc(m.val)} ${esc(m.unit)}</td><td>${esc(m.exp || "—")}</td><td><button class="btn ghost sm" data-del="${m.id}">🗑</button></td></tr>`).join("")}
+  </table>`;
+        list.querySelectorAll("[data-del]").forEach((b) => {
+          b.onclick = () => {
+            if (!confirm("Apagar esta medição?")) return;
+            u.measurements = u.measurements.filter(
+              (m) => String(m.id) !== b.dataset.del,
+            );
+            save();
+            renderMeasurements();
+            updateCompletionUI(5);
+          };
+        });
+      }
+
+      SETUP[6] = function () {
+        const u = student();
+        const out = $("#dgOut"),
+          btn = $("#dgBtn");
+        ["dg1", "dg2"].forEach((id) => {
+          const el = $("#" + id);
+          if (!el) return;
+          el.value = u.reflections[id] || "";
+          el.oninput = () => {
+            u.reflections[id] = el.value;
+            save();
+          };
+        });
+        const show = () => {
+          out.hidden = false;
+          out.className = "fb ok";
+          out.innerHTML =
+            "<strong>✓ Resposta:</strong> a referência deveria ser 2,0 V, mas está 0,5 V. <strong>O problema está na referência</strong>. Provavelmente um resistor está com valor errado. Solução: trocar o resistor e testar de novo.";
+        };
+        if (u.reflections.dg_revealed) show();
+        if (btn)
+          btn.onclick = () => {
+            if (!$("#dg2").value.trim()) {
+              out.hidden = false;
+              out.className = "fb no";
+              out.textContent =
+                "Escreva sua ideia no campo 2 antes de revelar.";
+              return;
+            }
+            u.reflections.dg_revealed = true;
+            save();
+            show();
+            giveBadge("detetive");
+            updateCompletionUI(6);
+          };
+      };
+
+      SETUP[7] = function () {
+        const u = student();
+        const d = u.dossier || {};
+        ["dEq", "dInt", "dFalha", "dCorr", "dRec"].forEach((id) => {
+          const el = $("#" + id);
+          if (!el) return;
+          el.value = d[id] || "";
+        });
+        const ds = $("#dSave");
+        if (ds)
+          ds.onclick = () => {
+            u.dossier = {
+              equipe: $("#dEq").value,
+              integrantes: $("#dInt").value,
+              falha: $("#dFalha").value,
+              correcao: $("#dCorr").value,
+              recomendacao: $("#dRec").value,
+            };
+            giveBadge("documentador");
+            save();
+            $("#dStatus").textContent = "✓ Salvo";
+            flashSave();
+            updateCompletionUI(7);
+          };
+      };
+
+      SETUP[8] = function () {
+        const parts = ["Sensor", "Buffer", "Filtro", "Comparador"];
+        const wrap = $("#ordemJogo");
+        if (!wrap) return;
+        wrap.innerHTML =
+          parts
+            .map(
+              (p, i) =>
+                `<button class="quiz-opt" data-ordem="${i}">${i + 1}. ${p}</button>`,
+            )
+            .join("") + `<div class="fb" hidden></div>`;
+        const fb = wrap.querySelector(".fb");
+        wrap.querySelectorAll("[data-ordem]").forEach((b) => {
+          b.onclick = () => {
+            fb.hidden = false;
+            fb.className = "fb ok";
+            fb.innerHTML =
+              "✓ Muito bem! A ordem certa é: <strong>Sensor → Buffer → Filtro → Comparador</strong>. Cada parte faz seu trabalho em sequência.";
+            wrap
+              .querySelectorAll("[data-ordem]")
+              .forEach((x) => x.classList.add("correct"));
+          };
+        });
+      };
+
+      SETUP[8] = function () {
+        const parts = ["Sensor", "Buffer", "Filtro", "Comparador"];
+        const wrap = $("#ordemJogo");
+        if (!wrap) return;
+        wrap.innerHTML =
+          parts
+            .map(
+              (p, i) =>
+                `<button class="quiz-opt" data-ordem="${i}">${i + 1}. ${p}</button>`,
+            )
+            .join("") + `<div class="fb" hidden></div>`;
+        const fb = wrap.querySelector(".fb");
+        wrap.querySelectorAll("[data-ordem]").forEach((b) => {
+          b.onclick = () => {
+            fb.hidden = false;
+            fb.className = "fb ok";
+            fb.innerHTML =
+              "✓ Muito bem! A ordem certa é: <strong>Sensor → Buffer → Filtro → Comparador</strong>. Cada parte faz seu trabalho em sequência.";
+            wrap
+              .querySelectorAll("[data-ordem]")
+              .forEach((x) => x.classList.add("correct"));
+          };
+        });
+      };
+
+      /* ==================== START ==================== */
+      render();
+    </script>
+  </body>
+</html>
